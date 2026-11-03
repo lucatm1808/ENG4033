@@ -17,7 +17,7 @@ void tickDoEncoder() {
 void setup() {
   Serial.begin(9600);
 
-  uint16_t ID = tela.readID();
+  int ID = tela.readID();
   tela.begin(ID);
 
   tela.setRotation(1);
