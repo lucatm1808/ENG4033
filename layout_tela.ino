@@ -19,11 +19,8 @@ void tickDoEncoder() {
 
 void setup() {
   Serial.begin(9600);
-  randomSeed(analogRead(A0));
-
   int ID = tela.readID();
   tela.begin(ID);
-
   tela.setRotation(1);
   tela.fillScreen(TFT_BLACK);
 
@@ -128,10 +125,10 @@ void loop() {
     int cy = 83;
     int raio = 42;
 
-    float rad = angulo_pot * DEG_TO_RAD;
-    int x1 = cx - (raio * cos(rad));
-    int y1 = cy + (raio * sin(rad));
-    int x2 = cx + (raio * cos(rad));
+    float rad = angulo_pot * PI/180.0;
+    int x1 = cx - (raio * cos(rad)); //cos(rad) calcula a projeção horizontal
+    int y1 = cy + (raio * sin(rad)); //sin(rad) calcula a projeção vertical
+    int x2 = cx + (raio * cos(rad)); 
     int y2 = cy - (raio * sin(rad));
     tela.fillRect(6, 37, 153, 93, TFT_BLACK);
     tela.drawLine(x1, y1, x2, y2, TFT_CYAN);
