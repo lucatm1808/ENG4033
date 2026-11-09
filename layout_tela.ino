@@ -75,7 +75,14 @@ void loop() {
   unsigned long instante_atual = millis();
 
   if (instante_atual > instante_anterior + 1000) {
-    int energia_atual = random(5, 80);
+    int energia_atual = 0;
+    if (Serial.available() > 0) {
+      String texto = Serial.readStringUntil('\n');
+      texto.trim();
+      energia_atual = texto.toInt();
+    } else {
+      energia_atual = random(5, 80);
+    }
 
     Serial.print(angulo_pot);
     Serial.print(",");
