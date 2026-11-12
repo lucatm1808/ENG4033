@@ -13,11 +13,11 @@ int angulo_pot = 0;
 int ultimo_angulo_pot = -1;
 int ultima_pos_encoder = -999;
 unsigned long instante_anterior = 0;
+int energia_anterior=0;
 int energia_max = 0;
 int angulo_max = 0;
 bool modo = false; // false (0) é manual, true (1) é automatico
-int grafico[75] = {0}; // Vetor para armazenar os pontos do gráfico rolante
-int pontos_coletados = 0;
+int x = 0;
 
 void tickDoEncoder() {
   encoder.tick();
@@ -141,23 +141,12 @@ void loop() {
         }
       }
     }
-
-    if (pontos_coletados < 75) {
-      grafico[pontos_coletados] = energia_atual;
-      pontos_coletados++;
-    } else {
-      for (int i = 0; i < 74; i++) {
-        grafico[i] = grafico[i + 1];
-      }
-      grafico[74] = energia_atual;
-    }
-
-    tela.fillRect(166, 37, 153, 93, TFT_BLACK);
-    for (int i = 0; i < pontos_coletados - 1; i++) {
-      tela.drawLine(166 + (i * 2), 130 - grafico[i], 166 + ((i + 1) * 2), 130 - grafico[i + 1], TFT_YELLOW);
-    }
-
+    
+    tela.drawLine(166 + x, 130 - energia_anterior, 166 + x + 2, 130 - energia_atual, TFT_YELLOW);
+    x += 2;
+    energia_anterior = energia_atual;
     tela.fillRect(265, 138, 50, 8, TFT_BLACK);
+    
     tela.setCursor(265, 138);
     tela.setTextColor(TFT_WHITE);
     tela.setTextSize(1);
