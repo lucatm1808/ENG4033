@@ -9,12 +9,13 @@ RotaryEncoder encoder(20, 21);
 GFButton botao(A8);
 
 int pot_motor = A10;
+int angulo_pot = 0;
 int ultimo_angulo_pot = -1;
 int ultima_pos_encoder = -999;
 unsigned long instante_anterior = 0;
 int energia_max = 0;
 int angulo_max = 0;
-bool modo = false; // false é manual, true é automatico
+bool modo = false; // false (0) é manual, true (1) é automatico
 int grafico[75] = {0}; // Vetor para armazenar os pontos do gráfico rolante
 int pontos_coletados = 0;
 
@@ -114,26 +115,32 @@ void setup() {
 
 void loop() {
   botao.process();
-  int val_pot = analogRead(pot_motor);
-  int angulo_pot = map(val_pot, 0, 1023, 0, 180);
+  if (!modo) {
+    int val_pot = analogRead(pot_motor); //modo manual
+    angulo_pot = map(val_pot, 0, 1023, 0, 180);
+  }
   int encoder_pos = encoder.getPosition();
   unsigned long instante_atual = millis();
 
   if (instante_atual > instante_anterior + 1000) {
     int energia_atual = 0;
+    Serial.print(angulo_pot);
+    Serial.print(";");
+    Serial.println(modo ? 1 : 0);
+
     if (Serial.available() > 0) {
       String texto = Serial.readStringUntil('\n');
       texto.trim();
-      energia_atual = texto.toInt();
-    } else {
-      energia_atual = random(5, 80);
+      int posPontoVirgula = texto.indexOf(';');
+      
+      if (posPontoVirgula != -1) {
+        int angulo_recebido = texto.substring(0, posPontoVirgula).toInt();
+        energia_atual = texto.substring(posPontoVirgula + 1).toInt();
+        if (modo){
+          angulo_pot=angulo_recebido; //modo automatico
+        }
+      }
     }
-
-    Serial.print(angulo_pot);
-    Serial.print(",");
-    Serial.print(encoder_pos);
-    Serial.print(",");
-    Serial.println(energia_atual);
 
     if (pontos_coletados < 75) {
       grafico[pontos_coletados] = energia_atual;
@@ -191,28 +198,26 @@ void loop() {
     tela.drawLine(cx, cy - 1, x1, y1 - 1, TFT_RED);
   }
 
-  if (modo) {
-    if (angulo_pot != ultimo_angulo_pot) {
-      tela.fillRect(85, 155, 70, 8, TFT_BLACK);
-      tela.setCursor(85, 155);
-      tela.setTextColor(TFT_WHITE);
-      tela.setTextSize(1);
-      tela.print(angulo_pot);
-      tela.print(" deg");
-      ultimo_angulo_pot = angulo_pot;
-
-      int cx = 120;
-      int cy = 83;
-      int raio = 30;
-      float rad = angulo_pot * PI / 180.0;
-      int x1 = cx - (raio * cos(rad));
-      int y1 = cy + (raio * sin(rad));
-      int x2 = cx + (raio * cos(rad));
-      int y2 = cy - (raio * sin(rad));
-      tela.fillCircle(cx, cy, 31, TFT_BLACK);
-      tela.drawLine(x1, y1, x2, y2, TFT_CYAN);
-      tela.drawLine(x1, y1 + 1, x2, y2 + 1, TFT_CYAN);
-      tela.fillCircle(cx, cy, 3, TFT_WHITE);
+  if (angulo_pot != ultimo_angulo_pot) {
+    tela.fillRect(85, 155, 70, 8, TFT_BLACK);
+    tela.setCursor(85, 155);
+    tela.setTextColor(TFT_WHITE);
+    tela.setTextSize(1);
+    tela.print(angulo_pot);
+    tela.print(" deg");
+    ultimo_angulo_pot = angulo_pot;
+    
+    int cx = 120;
+    int cy = 83;
+    int raio = 30;
+    float rad = angulo_pot * PI / 180.0;
+    int x1 = cx - (raio * cos(rad));
+    int y1 = cy + (raio * sin(rad));
+    int x2 = cx + (raio * cos(rad));
+    int y2 = cy - (raio * sin(rad));
+    tela.fillCircle(cx, cy, 31, TFT_BLACK);
+    tela.drawLine(x1, y1, x2, y2, TFT_CYAN);
+    tela.drawLine(x1, y1 + 1, x2, y2 + 1, TFT_CYAN);
+    tela.fillCircle(cx, cy, 3, TFT_WHITE);
     }
-  }
 }
