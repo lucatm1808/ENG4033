@@ -28,14 +28,14 @@ void mudar_modo() {
     tela.setCursor(42, 135);
     tela.setTextColor(TFT_WHITE);
     tela.setTextSize(1);
-    tela.print("Manual");
+    tela.print("Automatico");
     modo = true;
   } else {
     tela.fillRect(42, 135, 70, 8, TFT_BLACK);
     tela.setCursor(42, 135);
     tela.setTextColor(TFT_WHITE);
     tela.setTextSize(1);
-    tela.print("Automatico");
+    tela.print("Manual");
     modo = false;
   }
 }
@@ -74,6 +74,12 @@ void setup() {
   tela.setTextSize(1);
   tela.print("Modo: ");
 
+  tela.fillRect(42, 135, 70, 8, TFT_BLACK);
+  tela.setCursor(42, 135);
+  tela.setTextColor(TFT_WHITE);
+  tela.setTextSize(1);
+  tela.print("Manual");
+  
   tela.setCursor(10, 145);
   tela.setTextColor(TFT_CYAN);
   tela.setTextSize(1);
