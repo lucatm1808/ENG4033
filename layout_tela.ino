@@ -43,6 +43,7 @@ void mudar_modo() {
 
 void setup() {
   Serial.begin(9600);
+  Serial1.begin(9600);
 
   int ID = tela.readID();
   tela.begin(ID);
@@ -166,6 +167,16 @@ void loop() {
     instante_anterior = instante_atual;
   }
 
+  if (Serial1.available() > 0) {
+    String msg = Serial1.readStringUntil('\n');
+    msg.trim();
+    tela.fillRect(15, 187, 290, 30, TFT_BLACK);
+    tela.setCursor(20, 193);
+    tela.setTextColor(TFT_CYAN);
+    tela.setTextSize(2);
+    tela.print(msg);
+  }
+
   if (encoder_pos != ultima_pos_encoder) {
     tela.fillRect(40, 145, 70, 8, TFT_BLACK);
     tela.setCursor(40, 145);
@@ -208,5 +219,5 @@ void loop() {
     tela.drawLine(x1, y1, x2, y2, TFT_CYAN);
     tela.drawLine(x1, y1 + 1, x2, y2 + 1, TFT_CYAN);
     tela.fillCircle(cx, cy, 3, TFT_WHITE);
-    }
+  }
 }
