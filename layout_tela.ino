@@ -142,17 +142,22 @@ void loop() {
         }
       }
     }
-    
+
+    int y_grafico = map(constrain(energia_atual, 0, 5000), 0, 5000, 0, 90);
     tela.drawLine(166 + x, 130 - energia_anterior, 166 + x + 2, 130 - energia_atual, TFT_YELLOW);
     x += 2;
-    energia_anterior = energia_atual;
-    tela.fillRect(265, 138, 50, 8, TFT_BLACK);
-    
+    energia_anterior = y_grafico;
+    if (x > 150) {
+      x = 0;
+      tela.fillRect(166, 37, 153, 93, TFT_BLACK);
+    }
+
+    tela.fillRect(265, 138, 55, 8, TFT_BLACK);
     tela.setCursor(265, 138);
     tela.setTextColor(TFT_WHITE);
     tela.setTextSize(1);
     tela.print(energia_atual);
-    tela.print(" mW");
+    tela.print(" mV");
 
     if (energia_atual > energia_max) {
       energia_max = energia_atual;
@@ -162,7 +167,7 @@ void loop() {
       tela.setTextColor(TFT_WHITE);
       tela.setTextSize(1);
       tela.print(energia_max);
-      tela.print(" mW");
+      tela.print(" mV");
     }
     instante_anterior = instante_atual;
   }
