@@ -19,7 +19,7 @@ String codigo[] = {
   ".....", "-....", "--...", "---..", "----."
 };
 
-//String atual[5] = { ".....", "-----", "..", "", "" };
+
 const int TAMANHO_MAX = 25;
 String atual[TAMANHO_MAX];
 
