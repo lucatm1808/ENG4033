@@ -25,7 +25,7 @@ const int LUZ_DETECTADA = LOW;
 unsigned long instanteLeituraMorse = 0;
 unsigned long instanteMudancaMorse = 0;
 bool luzAnterior = false;
-bool letraFinaliza = false;
+bool letraFinalizada = false;
 bool espacoPendente = false;
 String codigoAtualMorse = "";
 String mensagemMorse = "";
@@ -118,7 +118,7 @@ void finalizarLetraMorse() {
     mensagemMorse.remove(0, mensagemMorse.length() - 35);
   }
 
-  atualizarTelaMorse;
+  atualizarTelaMorse();
 }
 
 void atualizarReceptorMorse() {
