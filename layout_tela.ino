@@ -138,7 +138,7 @@ void loop() {
 
   if (instante_atual > instante_anterior + 200) {
     int energia_atual = 0;
-    Serial1.print(modo ? 1 : 0));
+    Serial1.print(modo ? 1 : 0);
     Serial1.print(";");
     Serial1.println(estado_led ? 1 : 0);
     Serial1.print(";");
