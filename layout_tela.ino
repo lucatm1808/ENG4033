@@ -20,6 +20,20 @@ int angulo_max = 0;
 bool modo = false; // false (0) é manual, true (1) é automatico
 bool estado_led = false; // false (0) é off, true (1) é on
 int x = 0;
+const int sensorMorse = 22; //SENSOR MORSE
+const int LUZ_DETECTADA = LOW;
+unsigned long instanteLeituraMorse = 0;
+unsigned long instanteMudancaMorse = 0;
+bool luzAnterior = false;
+bool letraFinaliza = false;
+bool espacoPendente = false;
+String codigoAtualMorse = "";
+String mensagemMorse = "";
+String mensagemTraduzida = "";
+char caracteresMorse[] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+String tabelaMorse[] = {
+  ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--..", "-----", ".----", "..---", "...--", "....-", ".....", "-....", "--...", "---..", "----."
+};
 
 void tickDoEncoder() {
   encoder.tick();
@@ -50,6 +64,99 @@ void led() {
     estado_led = false;
   }
 }
+
+char traduzirMorse(String codigo) {
+  for (int i = 0; i < 36; i++) {
+    if (codigo == tabelaMorse[i]) {
+      return caracteresMorse[i];
+    }
+  }
+  return '?';
+}
+
+void atualizarTelaMorse() {
+  tela.fillRect(12, 184, 296, 36, TFT_BLACK);
+
+  tela.setTextSize(1);
+
+  tela.setTextColor(TFT_WHITE);
+  tela.setCursor(16, 188);
+  tela.print("Morse: ");
+  tela.print(mensagemMorse);
+
+  tela.setTextColor(TFT_CYAN);
+  tela.setCursor(16, 204);
+  tela.print("Texto: ");
+  tela.print(mensagemTraduzida);
+}
+
+void finalizarLetraMorse() {
+  if (codigoAtualMorse.length() == 0) {
+    return;
+  }
+
+  char letra = traduzirMorse(codigoAtualMorse);
+
+  if (espacoPendente) {
+    mensagemTraduzida += " ";
+    mensagemMorse += "/ ";
+    espacoPendente = false;
+  }
+
+  mensagemTraduzida += letra;
+  mensagemMorse += codigoAtualMorse;
+  mensagemMorse += " ";
+
+  codigoAtualMorse = "";
+  letraFinalizada = true;
+
+  if (mensagemTraduzida.length() > 35) {
+    mensagemTraduzida.remove(0, mensagemTraduzida.length() - 35);
+  }
+
+  if (mensagemMorse.length() > 35) {
+    mensagemMorse.remove(0, mensagemMorse.length() - 35);
+  }
+
+  atualizarTelaMorse;
+}
+
+void atualizarReceptorMorse() {
+  unsigned long agora = millis();
+  
+  if (agora - instanteLeituraMorse < 10) {
+    return;
+  }
+
+  instanteLeituraMorse = agora;
+  bool luzAtual = (digitalRead(sensorMorse) == LUZ_DETECTADA);
+  
+  if (luzAtual != luzAnterior) {
+    unsigned long duracao = agora - instanteMudancaMorse;
+    if (luzAnterior) {
+      if (duracao < 400) {
+        codigoAtualMorse += ".";
+      } else {
+        codigoAtualMorse += "-";
+      }
+      letraFinalizada = false;
+    }
+    luzAnterior = luzAtual;
+    instanteMudancaMorse = agora;
+  }
+  
+  if (!luzAtual) {
+    unsigned long tempoApagado = agora - instanteMudancaMorse;
+    if (tempoApagado >= 400 && codigoAtualMorse.length() > 0) {
+      finalizarLetraMorse();
+    }
+    if (tempoApagado >= 1200 && letraFinalizada) {
+      espacoPendente = true;
+    }
+  }
+}
+
+
 
 void setup() {
   Serial1.begin(9600);
@@ -122,12 +229,16 @@ void setup() {
   tela.setCursor(20, 193);
   tela.setTextColor(TFT_CYAN);
   tela.setTextSize(2);
-  tela.print("EU SOU UM SATELITE");
+  //tela.print("EU SOU UM SATELITE");
+  pinMode(sensorMorse, INPUT);
+  luzAnterior = (digitalRead(sensorMorse) == LUZ_DETECTADA);
+  instanteMudancaMorse = millis();
 }
 
 void loop() {
   botao1.process();
   botao2.process();
+  atualizarReceptorMorse();
 
   if (!modo) {
     int val_pot = analogRead(pot_motor); //modo manual
