@@ -57,12 +57,12 @@ void mudar_modo() {
   }
 }
 
-void led() {
-  if (estado_led == false) {
-    estado_led = true;
-  } else {
-    estado_led = false;
-  }
+void ligar_led() {
+  estado_led= true;
+}
+
+void desligar_led() {
+  estado_led= false;
 }
 
 char traduzirMorse(String codigo) {
@@ -160,7 +160,6 @@ void atualizarReceptorMorse() {
 
 void setup() {
   Serial1.begin(9600);
-  Serial2.begin(9600);
 
   int ID = tela.readID();
   tela.begin(ID);
@@ -169,7 +168,8 @@ void setup() {
   tela.fillScreen(TFT_BLACK);
 
   botao1.setPressHandler(mudar_modo);
-  botao2.setPressHandler(led);
+  botao2.setPressHandler(desligar_led);
+  botao2.setReleaseHandler(ligar_led);
 
   int origem1 = digitalPinToInterrupt(20);
   attachInterrupt(origem1, tickDoEncoder, CHANGE);
@@ -247,13 +247,13 @@ void loop() {
   int encoder_pos = encoder.getPosition();
   unsigned long instante_atual = millis();
 
-  if (instante_atual > instante_anterior + 200) {
+  if (instante_atual > instante_anterior + 50) {
     int energia_atual = 0;
     Serial1.print(modo ? 1 : 0);
     Serial1.print(";");
-    Serial1.println(estado_led ? 1 : 0);
+    Serial1.print(estado_led ? 1 : 0);
     Serial1.print(";");
-    Serial1.print(angulo_pot);
+    Serial1.println(angulo_pot);
 
     if (Serial1.available() > 0) {
       String texto = Serial1.readStringUntil('\n');
@@ -298,16 +298,6 @@ void loop() {
       tela.print(" mV");
     }
     instante_anterior = instante_atual;
-  }
-
-  if (Serial2.available() > 0) {
-    String msg = Serial2.readStringUntil('\n');
-    msg.trim();
-    tela.fillRect(15, 187, 290, 30, TFT_BLACK);
-    tela.setCursor(20, 193);
-    tela.setTextColor(TFT_CYAN);
-    tela.setTextSize(2);
-    tela.print(msg);
   }
 
   if (encoder_pos != ultima_pos_encoder) {
