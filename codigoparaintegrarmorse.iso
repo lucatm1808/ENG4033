@@ -1,0 +1,73 @@
+void atualizarReceptorMorse() {
+
+  unsigned long agora = millis();
+
+  // Lê o sensor a cada 10 ms
+
+  if (agora - instanteLeituraMorse < 10) {
+
+    return;
+
+  }
+
+  instanteLeituraMorse = agora;
+
+  bool luzAtual =
+
+    (digitalRead(sensorMorse) == LUZ_DETECTADA);
+
+  // Houve mudança: acendeu ou apagou
+
+  if (luzAtual != luzAnterior) {
+
+    unsigned long duracao = agora - instanteMudancaMorse;
+
+    if (luzAnterior) {
+
+      // A luz acabou de apagar: classifica o pulso
+
+      if (duracao < 400) {
+
+        codigoAtualMorse += ".";
+
+      } else {
+
+        codigoAtualMorse += "-";
+
+      }
+
+      letraFinalizada = false;
+
+    }
+
+    luzAnterior = luzAtual;
+
+    instanteMudancaMorse = agora;
+
+  }
+
+  if (!luzAtual) {
+
+    unsigned long tempoApagado = agora - instanteMudancaMorse;
+
+    // Pausa suficiente para terminar uma letra
+
+    if (tempoApagado >= 400 &&
+
+        codigoAtualMorse.length() > 0) {
+
+      finalizarLetraMorse();
+
+    }
+
+    // Pausa maior indica possível espaço entre palavras
+
+    if (tempoApagado >= 1200 && letraFinalizada) {
+
+      espacoPendente = true;
+
+    }
+
+  }
+
+}
