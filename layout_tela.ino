@@ -6,7 +6,8 @@
 
 MCUFRIEND_kbv tela;
 RotaryEncoder encoder(20, 21);
-GFButton botao(A8);
+GFButton botao1(A8);
+GFButton botao2(A9);
 
 int pot_motor = A10;
 int angulo_pot = 0;
@@ -17,6 +18,7 @@ int energia_anterior=0;
 int energia_max = 0;
 int angulo_max = 0;
 bool modo = false; // false (0) é manual, true (1) é automatico
+bool estado_led = false; // false (0) é off, true (1) é on
 int x = 0;
 
 void tickDoEncoder() {
@@ -41,9 +43,17 @@ void mudar_modo() {
   }
 }
 
+void led() {
+  if (estado_led == false) {
+    estado_led = true;
+  } else {
+    estado_led = false;
+  }
+}
+
 void setup() {
-  Serial.begin(9600);
   Serial1.begin(9600);
+  Serial2.begin(9600);
 
   int ID = tela.readID();
   tela.begin(ID);
@@ -51,7 +61,8 @@ void setup() {
   tela.setRotation(1);
   tela.fillScreen(TFT_BLACK);
 
-  botao.setPressHandler(mudar_modo);
+  botao1.setPressHandler(mudar_modo);
+  botao2.setPressHandler(led);
 
   int origem1 = digitalPinToInterrupt(20);
   attachInterrupt(origem1, tickDoEncoder, CHANGE);
@@ -115,7 +126,9 @@ void setup() {
 }
 
 void loop() {
-  botao.process();
+  botao1.process();
+  botao2.process();
+
   if (!modo) {
     int val_pot = analogRead(pot_motor); //modo manual
     angulo_pot = map(val_pot, 0, 1023, 0, 180);
@@ -123,20 +136,23 @@ void loop() {
   int encoder_pos = encoder.getPosition();
   unsigned long instante_atual = millis();
 
-  if (instante_atual > instante_anterior + 1000) {
+  if (instante_atual > instante_anterior + 200) {
     int energia_atual = 0;
-    Serial.print(angulo_pot);
-    Serial.print(";");
-    Serial.println(modo ? 1 : 0);
+    Serial1.print(modo ? 1 : 0));
+    Serial1.print(";");
+    Serial1.println(estado_led ? 1 : 0);
+    Serial1.print(";");
+    Serial1.print(angulo_pot);
 
-    if (Serial.available() > 0) {
-      String texto = Serial.readStringUntil('\n');
+    if (Serial1.available() > 0) {
+      String texto = Serial1.readStringUntil('\n');
       texto.trim();
       int posPontoVirgula = texto.indexOf(';');
       
       if (posPontoVirgula != -1) {
         int angulo_recebido = texto.substring(0, posPontoVirgula).toInt();
         energia_atual = texto.substring(posPontoVirgula + 1).toInt();
+        
         if (modo){
           angulo_pot=angulo_recebido; //modo automatico
         }
@@ -144,9 +160,10 @@ void loop() {
     }
 
     int y_grafico = map(constrain(energia_atual, 0, 5000), 0, 5000, 0, 90);
-    tela.drawLine(166 + x, 130 - energia_anterior, 166 + x + 2, 130 - energia_atual, TFT_YELLOW);
+    tela.drawLine(166 + x, 130 - energia_anterior, 166 + x + 2, 130 - y_grafico, TFT_YELLOW);
     x += 2;
     energia_anterior = y_grafico;
+    
     if (x > 150) {
       x = 0;
       tela.fillRect(166, 37, 153, 93, TFT_BLACK);
@@ -172,8 +189,8 @@ void loop() {
     instante_anterior = instante_atual;
   }
 
-  if (Serial1.available() > 0) {
-    String msg = Serial1.readStringUntil('\n');
+  if (Serial2.available() > 0) {
+    String msg = Serial2.readStringUntil('\n');
     msg.trim();
     tela.fillRect(15, 187, 290, 30, TFT_BLACK);
     tela.setCursor(20, 193);
@@ -215,7 +232,7 @@ void loop() {
     int cx = 120;
     int cy = 83;
     int raio = 30;
-    float rad = angulo_pot * PI / 180.0;
+    float rad = (angulo_pot - 90) * PI / 180.0;
     int x1 = cx - (raio * cos(rad));
     int y1 = cy + (raio * sin(rad));
     int x2 = cx + (raio * cos(rad));
