@@ -27,13 +27,14 @@ int tensaoMedia = 0;
 int ultimoModo = 0;
 unsigned long intervaloEntreEnvios = 200;
 unsigned long instanteUltimoEnvio = 0;
-// Ideia de refino do Claude: 
+int pinoLed = 13;
+
+// Refino: 
 // Correção fixa, em graus, somada ao servo direito.
 // Serve para alinhar os dois painéis se, com o mesmo ângulo, eles
 // ficarem um pouco diferentes (o braço de cada servo encaixa numa
 // posição diferente). Ajustar no teste, ex.: 5 ou -3. Com 0 não muda nada.
 int correcaoServoDireito = 0;
-int pinoLed = 13;
 
 void moverParaAngulo(int angulo) {
   servoEsquerdo.write(angulo);
@@ -126,6 +127,7 @@ void enviarDados() {
 
 void setup() {
   Serial1.begin(9600);
+  //Serial.begin(9600);
   Serial1.setTimeout(10);
   servoEsquerdo.attach(pinoServoEsquerdo);
   servoDireito.attach(pinoServoDireito);
