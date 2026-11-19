@@ -243,13 +243,13 @@ void loop() {
   atualizarReceptorMorse();
 
   if (!modo) {
-    int val_pot = analogRead(pot_motor); //modo manual
+    int val_pot = analogRead(pot_motor);
     angulo_pot = map(val_pot, 0, 1023, 0, 180);
   }
   int encoder_pos = encoder.getPosition();
   unsigned long instante_atual = millis();
 
-  if (instante_atual > instante_anterior + 300) {
+  if (instante_atual > instante_anterior + 50) {
     Serial1.print(modo ? 1 : 0);
     Serial1.print(";");
     Serial1.print(estado_led ? 1 : 0);
@@ -263,40 +263,40 @@ void loop() {
       
       if (posPontoVirgula != -1) {
         int angulo_recebido = texto.substring(0, posPontoVirgula).toInt();
-        energia_atual = texto.substring(posPontoVirgula + 1).toInt();
+        int energia_atual = texto.substring(posPontoVirgula + 1).toInt();
         
-        if (modo){
-          angulo_pot=angulo_recebido; //modo automatico
+        if (modo) {
+          angulo_pot = angulo_recebido;
+        }
+
+        int y_grafico = map(constrain(energia_atual, 0, 5000), 0, 5000, 0, 90);
+        tela.drawLine(166 + x, 130 - energia_anterior, 166 + x + 2, 130 - y_grafico, TFT_YELLOW);
+        x += 2;
+        energia_anterior = y_grafico;
+        
+        if (x > 150) {
+          x = 0;
+          tela.fillRect(166, 37, 153, 93, TFT_BLACK);
+        }
+
+        tela.fillRect(265, 138, 55, 8, TFT_BLACK);
+        tela.setCursor(265, 138);
+        tela.setTextColor(TFT_WHITE);
+        tela.setTextSize(1);
+        tela.print(energia_atual);
+        tela.print(" mV");
+
+        if (energia_atual > energia_max) {
+          energia_max = energia_atual;
+          angulo_max = ultimo_angulo_pot;
+          tela.fillRect(256, 148, 70, 8, TFT_BLACK);
+          tela.setCursor(256, 148);
+          tela.setTextColor(TFT_WHITE);
+          tela.setTextSize(1);
+          tela.print(energia_max);
+          tela.print(" mV");
         }
       }
-    }
-
-    int y_grafico = map(constrain(energia_atual, 0, 5000), 0, 5000, 0, 90);
-    tela.drawLine(166 + x, 130 - energia_anterior, 166 + x + 2, 130 - y_grafico, TFT_YELLOW);
-    x += 2;
-    energia_anterior = y_grafico;
-    
-    if (x > 150) {
-      x = 0;
-      tela.fillRect(166, 37, 153, 93, TFT_BLACK);
-    }
-
-    tela.fillRect(265, 138, 55, 8, TFT_BLACK);
-    tela.setCursor(265, 138);
-    tela.setTextColor(TFT_WHITE);
-    tela.setTextSize(1);
-    tela.print(energia_atual);
-    tela.print(" mV");
-
-    if (energia_atual > energia_max) {
-      energia_max = energia_atual;
-      angulo_max = ultimo_angulo_pot;
-      tela.fillRect(256, 148, 70, 8, TFT_BLACK);
-      tela.setCursor(256, 148);
-      tela.setTextColor(TFT_WHITE);
-      tela.setTextSize(1);
-      tela.print(energia_max);
-      tela.print(" mV");
     }
     instante_anterior = instante_atual;
   }
