@@ -20,6 +20,7 @@ int angulo_max = 0;
 bool modo = false; // false (0) é manual, true (1) é automatico
 bool estado_led = false; // false (0) é off, true (1) é on
 int x = 0;
+int energia_atual = 0;
 const int sensorMorse = 22; //SENSOR MORSE
 const int LUZ_DETECTADA = LOW;
 unsigned long instanteLeituraMorse = 0;
@@ -160,7 +161,8 @@ void atualizarReceptorMorse() {
 
 void setup() {
   Serial1.begin(9600);
-
+  Serial1.setTimeout(20);
+  
   int ID = tela.readID();
   tela.begin(ID);
 
@@ -247,8 +249,7 @@ void loop() {
   int encoder_pos = encoder.getPosition();
   unsigned long instante_atual = millis();
 
-  if (instante_atual > instante_anterior + 50) {
-    int energia_atual = 0;
+  if (instante_atual > instante_anterior + 300) {
     Serial1.print(modo ? 1 : 0);
     Serial1.print(";");
     Serial1.print(estado_led ? 1 : 0);
