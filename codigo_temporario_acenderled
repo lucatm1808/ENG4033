@@ -1,0 +1,30 @@
+#include <GFButton.h>
+
+int laser = 5;
+GFButton botao(13);
+bool estado_led = false;
+
+void ligar_led() {
+  estado_led = true;
+}
+
+void desligar_led() {
+  estado_led = false;
+}
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(laser, OUTPUT);
+  botao.setPressHandler(desligar_led);
+  botao.setReleaseHandler(ligar_led);
+}
+
+void loop() {
+  botao.process();
+  if (estado_led) {
+    digitalWrite(laser, HIGH);
+  }
+  else {
+    digitalWrite(laser, LOW);
+  }
+}
