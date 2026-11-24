@@ -128,7 +128,7 @@ void enviarDados() {
 void setup() {
   Serial1.begin(9600);
   //Serial.begin(9600);
-  Serial1.setTimeout(10);
+  Serial1.setTimeout(50);
   servoEsquerdo.attach(pinoServoEsquerdo);
   servoDireito.attach(pinoServoDireito);
   pinMode(pinoPlacaSolar, INPUT);
