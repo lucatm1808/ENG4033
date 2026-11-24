@@ -26,18 +26,19 @@ const int LUZ_DETECTADA = LOW;
 unsigned long instanteLeituraMorse = 0;
 unsigned long instanteMudancaMorse = 0;
 bool luzAnterior = false;
+unsigned long instanteUltimaLuz = 0;
+const unsigned long FILTRO_PISCADA = 90;
 String codigoAtualMorse = "";
 String mensagemMorse = "";
-// Desafio: a pessoa escreve a palavra em Morse com o LED (palavras de ate 9 letras para caber na tela)
-String palavras[] = { "PLANETA", "SATELITE", "LUA", "SOL", "ESTRELA", "COMETA", "ORBITA", "TERRA" };
-const int QTD_PALAVRAS = 8;
+String palavras[] = { "PLANETA", "SATELITE", "LUA", "SOL", "ESTRELA", "1969" , "COMETA", "ORBITA", "TERRA" };
+const int QTD_PALAVRAS = 9;
 int indicePalavra = 0;
 String tentativa = "";              // letras que a pessoa ja escreveu
 bool mostrandoResultado = false;
 bool acertou = false;
 unsigned long instanteResultado = 0;
-const unsigned long TEMPO_RESULTADO = 2500;  // tempo mostrando "Correto"/"Incorreto"
-const unsigned long TEMPO_CONFERIR = 3000;   // pausa sem luz que encerra a tentativa antes da hora
+const unsigned long TEMPO_RESULTADO = 2500;
+const unsigned long TEMPO_CONFERIR = 10000;   // pausa sem luz que encerra a tentativa antes da hora
 char caracteresMorse[] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 String tabelaMorse[] = {
   ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--..", "-----", ".----", "..---", "...--", "....-", ".....", "-....", "--...", "---..", "----."
@@ -85,7 +86,6 @@ char traduzirMorse(String codigo) {
 void atualizarTelaMorse() {
   tela.fillRect(12, 184, 296, 36, TFT_BLACK);
 
-  // Linha 1: "PLANETA -> PLAN"
   tela.setTextSize(2);
   tela.setCursor(16, 187);
   tela.setTextColor(TFT_WHITE);
@@ -99,7 +99,6 @@ void atualizarTelaMorse() {
   }
   tela.print(tentativa);
 
-  // Linha 2: resultado ou o Morse que ja foi recebido
   tela.setTextSize(1);
   tela.setCursor(16, 208);
   if (mostrandoResultado) {
@@ -125,11 +124,15 @@ void conferirPalavra() {
 }
 
 void proximaPalavra() {
-  indicePalavra = (indicePalavra + 1) % QTD_PALAVRAS;
+  indicePalavra = (indicePalavra + 1);
   tentativa = "";
   mensagemMorse = "";
   codigoAtualMorse = "";
   mostrandoResultado = false;
+  if (indicePalavra > QTD_PALAVRAS)
+    {
+      indicePalavra==0;
+    }
   atualizarTelaMorse();
 }
 
@@ -138,7 +141,6 @@ void finalizarLetraMorse() {
     return;
   }
 
-  // enquanto mostra "Correto"/"Incorreto", ignora o que chegar
   if (mostrandoResultado) {
     codigoAtualMorse = "";
     return;
@@ -148,15 +150,9 @@ void finalizarLetraMorse() {
 
   tentativa += letra;
   mensagemMorse += codigoAtualMorse;
-  mensagemMorse += " ";
-
   codigoAtualMorse = "";
 
-  if (mensagemMorse.length() > 35) {
-    mensagemMorse.remove(0, mensagemMorse.length() - 35);
-  }
-
-  // escreveu a quantidade de letras da palavra: confere
+  // escreveu a quantidade de letras da palavra
   if (tentativa.length() >= palavras[indicePalavra].length()) {
     conferirPalavra();
   } else {
@@ -172,33 +168,38 @@ void atualizarReceptorMorse() {
   }
 
   instanteLeituraMorse = agora;
-  bool luzAtual = (digitalRead(sensorMorse) == LUZ_DETECTADA);
-  
+  bool leitura = (digitalRead(sensorMorse) == LUZ_DETECTADA);
+  if (leitura) {
+    instanteUltimaLuz = agora;
+  }
+  // evitar mau contato
+  bool luzAtual = leitura || (luzAnterior && agora - instanteUltimaLuz < FILTRO_PISCADA);
+
   if (luzAtual != luzAnterior) {
-    unsigned long duracao = agora - instanteMudancaMorse;
     if (luzAnterior) {
+      // apagou de verdade
+      unsigned long duracao = instanteUltimaLuz - instanteMudancaMorse;
       if (duracao < 400) {
         codigoAtualMorse += ".";
       } else {
         codigoAtualMorse += "-";
       }
+      instanteMudancaMorse = instanteUltimaLuz;
+    } else {
+      instanteMudancaMorse = agora;
     }
     luzAnterior = luzAtual;
-    instanteMudancaMorse = agora;
   }
   
   if (!luzAtual) {
     unsigned long tempoApagado = agora - instanteMudancaMorse;
-    if (tempoApagado >= 400 && codigoAtualMorse.length() > 0) {
+    if (tempoApagado >= 2000 && codigoAtualMorse.length() > 0) {
       finalizarLetraMorse();
     }
-    // ficou muito tempo sem luz no meio da palavra (ex.: pulou uma letra): confere assim mesmo
     if (tempoApagado >= TEMPO_CONFERIR && tentativa.length() > 0 && !mostrandoResultado) {
       conferirPalavra();
     }
   }
-
-  // depois de mostrar o resultado, passa para a proxima palavra
   if (mostrandoResultado && agora - instanteResultado >= TEMPO_RESULTADO) {
     proximaPalavra();
   }
@@ -209,7 +210,7 @@ void atualizarReceptorMorse() {
 void setup() {
   Serial1.begin(9600);
   Serial1.setTimeout(20);
-  
+
   int ID = tela.readID();
   tela.begin(ID);
 
@@ -283,7 +284,7 @@ void setup() {
   luzAnterior = (digitalRead(sensorMorse) == LUZ_DETECTADA);
   instanteMudancaMorse = millis();
 
-  atualizarTelaMorse(); // mostra a primeira palavra
+  atualizarTelaMorse(); 
 }
 
 void loop() {
