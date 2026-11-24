@@ -30,6 +30,7 @@ unsigned long instanteUltimaLuz = 0;
 const unsigned long FILTRO_PISCADA = 90;
 String codigoAtualMorse = "";
 String mensagemMorse = "";
+// Desafio: a pessoa escreve a palavra em Morse com o LED
 String palavras[] = { "PLANETA", "SATELITE", "LUA", "SOL", "ESTRELA", "1969" , "COMETA", "ORBITA", "TERRA" };
 const int QTD_PALAVRAS = 9;
 int indicePalavra = 0;
@@ -86,6 +87,7 @@ char traduzirMorse(String codigo) {
 void atualizarTelaMorse() {
   tela.fillRect(12, 184, 296, 36, TFT_BLACK);
 
+  // Linha 1: "PLANETA -> PLAN"
   tela.setTextSize(2);
   tela.setCursor(16, 187);
   tela.setTextColor(TFT_WHITE);
@@ -99,6 +101,7 @@ void atualizarTelaMorse() {
   }
   tela.print(tentativa);
 
+  // Linha 2: resultado ou o Morse que ja foi recebido
   tela.setTextSize(1);
   tela.setCursor(16, 208);
   if (mostrandoResultado) {
@@ -152,7 +155,7 @@ void finalizarLetraMorse() {
   mensagemMorse += codigoAtualMorse;
   codigoAtualMorse = "";
 
-  // escreveu a quantidade de letras da palavra
+  // escreveu a quantidade de letras da palavra: confere
   if (tentativa.length() >= palavras[indicePalavra].length()) {
     conferirPalavra();
   } else {
@@ -177,7 +180,7 @@ void atualizarReceptorMorse() {
 
   if (luzAtual != luzAnterior) {
     if (luzAnterior) {
-      // apagou de verdade
+      // apagou de verdade: a luz terminou na ultima vez em que foi vista
       unsigned long duracao = instanteUltimaLuz - instanteMudancaMorse;
       if (duracao < 400) {
         codigoAtualMorse += ".";
@@ -208,6 +211,7 @@ void atualizarReceptorMorse() {
 
 
 void setup() {
+  Serial.begin(9600);
   Serial1.begin(9600);
   Serial1.setTimeout(20);
 
@@ -284,7 +288,7 @@ void setup() {
   luzAnterior = (digitalRead(sensorMorse) == LUZ_DETECTADA);
   instanteMudancaMorse = millis();
 
-  atualizarTelaMorse(); 
+  atualizarTelaMorse(); // mostra a primeira palavra
 }
 
 void loop() {
